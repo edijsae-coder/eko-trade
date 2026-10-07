@@ -180,6 +180,71 @@ async def get_otc_candles(pair, duration):
     return candles
 
 
+def candles_are_continuous(candles, timeframe):
+    expected = timeframe
+
+    for i in range(1, len(candles)):
+        previous = int(candles[i - 1]["time"])
+        current = int(candles[i]["time"])
+
+        if current - previous != expected:
+            return False
+
+    return True
+
+
+def run_backtest(candles, duration):
+    timeframe = TIMEFRAMES[duration]
+
+    wins = 0
+    losses = 0
+    skipped = 0
+
+    for i in range(30, len(candles) - 1):
+        window = candles[:i]
+
+        if not candles_are_continuous(window[-30:], timeframe):
+            skipped += 1
+            continue
+
+        closes = [
+            float(candle["close"])
+            for candle in window
+        ]
+
+        signal = generate_signal(closes)
+
+        entry = float(candles[i]["close"])
+        exit_price = float(candles[i + 1]["close"])
+
+        if signal == "BUY":
+            win = exit_price > entry
+        else:
+            win = exit_price < entry
+
+        if win:
+            wins += 1
+        else:
+            losses += 1
+
+    total = wins + losses
+
+    accuracy = (
+        round((wins / total) * 100, 2)
+        if total > 0
+        else 0
+    )
+
+    return {
+        "wins": wins,
+        "losses": losses,
+        "skipped": skipped,
+        "total": total,
+        "accuracy": accuracy,
+        "duration": duration,
+    }
+
+
 @app.get("/")
 async def home():
     return FileResponse(FRONTEND / "index.html")
@@ -223,3 +288,24 @@ async def analyze(req: AnalyzeRequest):
         "duration": req.duration,
         "data_source": "Pocket Option OTC",
     }
+
+
+@app.get("/api/backtest")
+async def backtest(
+    pair: str = "EUR/USD OTC",
+    duration: int = 1,
+):
+    candles = await get_otc_candles(
+        pair,
+        duration,
+    )
+
+    result = run_backtest(
+        candles,
+        duration,
+    )
+
+    result["pair"] = pair
+    result["data_source"] = "Pocket Option OTC"
+
+    return result
