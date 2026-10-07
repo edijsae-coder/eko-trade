@@ -5,7 +5,7 @@ if (tg) {
   try { tg.setHeaderColor("#030b14"); tg.setBackgroundColor("#030a12"); } catch (_) {}
 }
 
-let pair = "EUR/USD";
+let pair = "EUR/USD OTC";
 let minutes = 2;
 
 const $ = (id) => document.getElementById(id);
