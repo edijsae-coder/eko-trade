@@ -609,28 +609,21 @@ async def robust_test(
         "threshold": 3,
     }
 
+    # Pilns tests uz visām pieejamajām svecēm
+    full_result = test_strategy(candles, duration, strategy)
+
+    # Papildus sadalām datus 3 secīgos periodos
     segment_size = len(candles) // 3
-    results = []
+    segments = []
 
     for i in range(3):
         start = i * segment_size
         end = (i + 1) * segment_size if i < 2 else len(candles)
 
         segment = candles[start:end]
-
-        if len(segment) < 45:
-            results.append({
-                "segment": i + 1,
-                "wins": 0,
-                "losses": 0,
-                "total": 0,
-                "accuracy": 0,
-            })
-            continue
-
         result = test_strategy(segment, duration, strategy)
 
-        results.append({
+        segments.append({
             "segment": i + 1,
             "wins": result["wins"],
             "losses": result["losses"],
@@ -638,17 +631,16 @@ async def robust_test(
             "accuracy": result["accuracy"],
         })
 
-    total_wins = sum(x["wins"] for x in results)
-    total_losses = sum(x["losses"] for x in results)
-    total = total_wins + total_losses
-
     return {
         "pair": pair,
         "duration": duration,
         "strategy": strategy["name"],
-        "segments": results,
-        "total_wins": total_wins,
-        "total_losses": total_losses,
-        "total": total,
-        "accuracy": round(total_wins / total * 100, 2) if total else 0,
+        "candles": len(candles),
+        "full_test": {
+            "wins": full_result["wins"],
+            "losses": full_result["losses"],
+            "total": full_result["total"],
+            "accuracy": full_result["accuracy"],
+        },
+        "segments": segments,
     }
