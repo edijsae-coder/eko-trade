@@ -313,7 +313,7 @@ def strategy_test_signal(closes, strategy):
     slow = ema(closes, strategy["slow"])
     current_rsi = rsi(closes, strategy["rsi"])
 
-    if fast is None or slow is None:
+    if fast is None or slow is None or current_rsi is None:
         return None
 
     score = 0
@@ -324,20 +324,33 @@ def strategy_test_signal(closes, strategy):
     elif fast < slow:
         score -= 1
 
-    # Momentum
+    # Price momentum
     if closes[-1] > closes[-2] > closes[-3]:
         score += 1
     elif closes[-1] < closes[-2] < closes[-3]:
         score -= 1
 
-    # RSI
-    if current_rsi < strategy["rsi_low"]:
+    # Candle strength
+    body = abs(closes[-1] - closes[-2])
+
+    if closes[-1] > closes[-2] and body > 0:
         score += 1
-    elif current_rsi > strategy["rsi_high"]:
+    elif closes[-1] < closes[-2] and body > 0:
         score -= 1
 
-    # Strong signal only
-    threshold = strategy.get("threshold", 2)
+    # RSI confirmation
+    if 50 <= current_rsi <= 68:
+        score += 1
+    elif 32 <= current_rsi < 50:
+        score -= 1
+
+    # Avoid extreme RSI
+    if current_rsi > 75:
+        score -= 2
+    elif current_rsi < 25:
+        score += 2
+
+    threshold = strategy.get("threshold", 3)
 
     if score >= threshold:
         return "BUY"
@@ -346,34 +359,6 @@ def strategy_test_signal(closes, strategy):
         return "SELL"
 
     return None
-    if len(closes) < 40:
-        return None
-
-    fast = ema(closes, strategy["fast"])
-    slow = ema(closes, strategy["slow"])
-    current_rsi = rsi(closes, strategy["rsi"])
-
-    if fast is None or slow is None:
-        return None
-
-    score = 0
-
-    if fast > slow:
-        score += 1
-    else:
-        score -= 1
-
-    if closes[-1] > closes[-2]:
-        score += 1
-    else:
-        score -= 1
-
-    if current_rsi < strategy["rsi_low"]:
-        score += 1
-    elif current_rsi > strategy["rsi_high"]:
-        score -= 1
-
-    return "BUY" if score > 0 else "SELL"
 
 
 STRATEGIES = [
