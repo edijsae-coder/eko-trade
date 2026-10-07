@@ -177,15 +177,7 @@ async def get_otc_candles(pair, duration):
             detail="Not enough OTC candle data",
         )
 
-    gaps = data.get("gaps", {})
-
-    if gaps.get("runs", 0) > 0:
-        raise HTTPException(
-            status_code=502,
-            detail="OTC data contains gaps. Try again.",
-        )
-
-    return candles
+       return candles
 
 
 @app.get("/")
