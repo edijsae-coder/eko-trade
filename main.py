@@ -160,7 +160,7 @@ async def get_otc_candles(pair, duration):
         "venue": "otc",
         "symbol": symbol,
         "tf": timeframe,
-        "limit": 200,
+        "limit": 500,
     }
 
     try:
