@@ -305,7 +305,161 @@ async def analyze(req: AnalyzeRequest):
         "data_source": "Pocket Option OTC",
     }
 
+def strategy_test_signal(closes, strategy):
+    if len(closes) < 40:
+        return None
 
+    fast = ema(closes, strategy["fast"])
+    slow = ema(closes, strategy["slow"])
+    current_rsi = rsi(closes, strategy["rsi"])
+
+    if fast is None or slow is None:
+        return None
+
+    score = 0
+
+    if fast > slow:
+        score += 1
+    else:
+        score -= 1
+
+    if closes[-1] > closes[-2]:
+        score += 1
+    else:
+        score -= 1
+
+    if current_rsi < strategy["rsi_low"]:
+        score += 1
+    elif current_rsi > strategy["rsi_high"]:
+        score -= 1
+
+    return "BUY" if score > 0 else "SELL"
+
+
+STRATEGIES = [
+    {
+        "name": "EMA 9/21 RSI 30/70",
+        "fast": 9,
+        "slow": 21,
+        "rsi": 14,
+        "rsi_low": 30,
+        "rsi_high": 70,
+    },
+    {
+        "name": "EMA 8/21 RSI 35/65",
+        "fast": 8,
+        "slow": 21,
+        "rsi": 14,
+        "rsi_low": 35,
+        "rsi_high": 65,
+    },
+    {
+        "name": "EMA 10/25 RSI 35/65",
+        "fast": 10,
+        "slow": 25,
+        "rsi": 14,
+        "rsi_low": 35,
+        "rsi_high": 65,
+    },
+    {
+        "name": "EMA 12/26 RSI 30/70",
+        "fast": 12,
+        "slow": 26,
+        "rsi": 14,
+        "rsi_low": 30,
+        "rsi_high": 70,
+    },
+    {
+        "name": "EMA 5/20 RSI 40/60",
+        "fast": 5,
+        "slow": 20,
+        "rsi": 14,
+        "rsi_low": 40,
+        "rsi_high": 60,
+    },
+]
+
+
+def test_strategy(candles, duration, strategy):
+    wins = 0
+    losses = 0
+
+    for i in range(40, len(candles) - 1):
+        closes = [
+            float(candle["close"])
+            for candle in candles[:i]
+        ]
+
+        signal = strategy_test_signal(
+            closes,
+            strategy,
+        )
+
+        if signal is None:
+            continue
+
+        entry = float(candles[i]["close"])
+        exit_price = float(candles[i + 1]["close"])
+
+        if signal == "BUY":
+            win = exit_price > entry
+        else:
+            win = exit_price < entry
+
+        if win:
+            wins += 1
+        else:
+            losses += 1
+
+    total = wins + losses
+
+    accuracy = (
+        round((wins / total) * 100, 2)
+        if total
+        else 0
+    )
+
+    return {
+        "strategy": strategy["name"],
+        "wins": wins,
+        "losses": losses,
+        "total": total,
+        "accuracy": accuracy,
+    }
+
+
+@app.get("/api/strategy-test")
+async def strategy_test(
+    pair: str = "EUR/USD OTC",
+    duration: int = 2,
+):
+    candles = await get_otc_candles(
+        pair,
+        duration,
+    )
+
+    results = []
+
+    for strategy in STRATEGIES:
+        results.append(
+            test_strategy(
+                candles,
+                duration,
+                strategy,
+            )
+        )
+
+    results.sort(
+        key=lambda x: x["accuracy"],
+        reverse=True,
+    )
+
+    return {
+        "pair": pair,
+        "duration": duration,
+        "data_source": "Pocket Option OTC",
+        "results": results,
+    }
 @app.get("/api/backtest")
 async def backtest(
     pair: str = "EUR/USD OTC",
