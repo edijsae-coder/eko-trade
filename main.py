@@ -591,3 +591,64 @@ async def validate(
         "total": result["total"],
         "accuracy": result["accuracy"],
     }
+    
+@app.get("/api/robust-test")
+async def robust_test(
+    pair: str = "EUR/USD OTC",
+    duration: int = 2,
+):
+    candles = await get_otc_candles(pair, duration)
+
+    strategy = {
+        "name": "EMA 9/21 RSI 18 T3",
+        "fast": 9,
+        "slow": 21,
+        "rsi": 18,
+        "rsi_low": 30,
+        "rsi_high": 70,
+        "threshold": 3,
+    }
+
+    segment_size = len(candles) // 3
+    results = []
+
+    for i in range(3):
+        start = i * segment_size
+        end = (i + 1) * segment_size if i < 2 else len(candles)
+
+        segment = candles[start:end]
+
+        if len(segment) < 45:
+            results.append({
+                "segment": i + 1,
+                "wins": 0,
+                "losses": 0,
+                "total": 0,
+                "accuracy": 0,
+            })
+            continue
+
+        result = test_strategy(segment, duration, strategy)
+
+        results.append({
+            "segment": i + 1,
+            "wins": result["wins"],
+            "losses": result["losses"],
+            "total": result["total"],
+            "accuracy": result["accuracy"],
+        })
+
+    total_wins = sum(x["wins"] for x in results)
+    total_losses = sum(x["losses"] for x in results)
+    total = total_wins + total_losses
+
+    return {
+        "pair": pair,
+        "duration": duration,
+        "strategy": strategy["name"],
+        "segments": results,
+        "total_wins": total_wins,
+        "total_losses": total_losses,
+        "total": total,
+        "accuracy": round(total_wins / total * 100, 2) if total else 0,
+    }
