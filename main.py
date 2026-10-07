@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 BASE = Path(__file__).resolve().parent
 app = FastAPI(title="EKO TRADE")
 
-PAIR_ALLOWLIST = {"EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CHF", "NZD/USD"}
+PAIR_ALLOWLIST = {"EUR/USD OTC", "GBP/USD OTC", "USD/JPY OTC", "AUD/USD OTC", "USD/CHF OTC", "NZD/USD OTC"}
 DURATION_ALLOWLIST = {1, 2, 5, 15}
 
 class AnalyzeRequest(BaseModel):
@@ -91,7 +91,7 @@ async def analyze(req: AnalyzeRequest):
     if req.minutes not in DURATION_ALLOWLIST:
         raise HTTPException(400, "Unsupported duration")
 
-    candles = await get_candles(req.pair)
+   candles = await get_candles(req.pair.replace(" OTC", ""))
     signal = generate_signal(candles, req.minutes)
     return {"signal": signal, "pair": req.pair, "minutes": req.minutes}
 
