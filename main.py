@@ -552,23 +552,34 @@ async def optimize(
 async def validate(
     pair: str = "EUR/USD OTC",
     duration: int = 2,
+    fast: int = 9,
+    slow: int = 21,
+    rsi_period: int = 18,
+    threshold: int = 3,
 ):
-    candles = await get_otc_candles(pair, duration)
+    candles = await get_otc_candles(
+        pair,
+        duration,
+    )
 
     split = int(len(candles) * 0.6)
     validation_candles = candles[split:]
 
     strategy = {
-        "name": "EMA 9/21 RSI 18 T3",
-        "fast": 9,
-        "slow": 21,
-        "rsi": 18,
+        "name": f"EMA {fast}/{slow} RSI {rsi_period} T{threshold}",
+        "fast": fast,
+        "slow": slow,
+        "rsi": rsi_period,
         "rsi_low": 30,
         "rsi_high": 70,
-        "threshold": 3,
+        "threshold": threshold,
     }
 
-    result = test_strategy(validation_candles, duration, strategy)
+    result = test_strategy(
+        validation_candles,
+        duration,
+        strategy,
+    )
 
     return {
         "pair": pair,
