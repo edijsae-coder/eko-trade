@@ -513,18 +513,13 @@ async def optimize(
     pair: str = "EUR/USD OTC",
     duration: int = 2,
 ):
-    candles = await get_otc_candles(
-        pair,
-        duration,
-    )
-
+    candles = await get_otc_candles(pair, duration)
     strategies = []
 
     for fast in [5, 7, 9, 11, 13]:
         for slow in [18, 21, 24, 27, 30]:
             if fast >= slow:
                 continue
-
             for rsi_period in [10, 14, 18]:
                 for threshold in [2, 3]:
                     strategy = {
@@ -536,21 +531,12 @@ async def optimize(
                         "rsi_high": 70,
                         "threshold": threshold,
                     }
-
-                    result = test_strategy(
-                        candles,
-                        duration,
-                        strategy,
-                    )
-
+                    result = test_strategy(candles, duration, strategy)
                     if result["total"] >= 20:
                         strategies.append(result)
 
     strategies.sort(
-        key=lambda x: (
-            x["accuracy"],
-            x["total"],
-        ),
+        key=lambda x: (x["accuracy"], x["total"]),
         reverse=True,
     )
 
@@ -558,15 +544,16 @@ async def optimize(
         "pair": pair,
         "duration": duration,
         "data_source": "Pocket Option OTC",
-        @app.get("/api/validate")
+        "results": strategies[:10],
+    }
+
+
+@app.get("/api/validate")
 async def validate(
     pair: str = "EUR/USD OTC",
     duration: int = 2,
 ):
-    candles = await get_otc_candles(
-        pair,
-        duration,
-    )
+    candles = await get_otc_candles(pair, duration)
 
     split = int(len(candles) * 0.6)
     validation_candles = candles[split:]
@@ -581,11 +568,7 @@ async def validate(
         "threshold": 3,
     }
 
-    result = test_strategy(
-        validation_candles,
-        duration,
-        strategy,
-    )
+    result = test_strategy(validation_candles, duration, strategy)
 
     return {
         "pair": pair,
@@ -596,6 +579,4 @@ async def validate(
         "losses": result["losses"],
         "total": result["total"],
         "accuracy": result["accuracy"],
-    }
-        "results": strategies[:10],
     }
