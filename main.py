@@ -80,35 +80,51 @@ def rsi(values, period=14):
 
 
 def generate_signal(closes):
-    if len(closes) < 30:
+    if len(closes) < 40:
         raise ValueError("Not enough candle data")
 
-    fast_ema = ema(closes, 9)
-    slow_ema = ema(closes, 21)
-    current_rsi = rsi(closes, 14)
+    ema_fast = ema(closes, 9)
+    ema_slow = ema(closes, 21)
+    ema_short = ema(closes, 5)
 
-    if fast_ema is None or slow_ema is None:
-        raise ValueError("Unable to calculate indicators")
+    current_rsi = rsi(closes, 14)
 
     score = 0
 
-    if fast_ema > slow_ema:
+    # Trend direction
+    if ema_fast > ema_slow:
+        score += 2
+    elif ema_fast < ema_slow:
+        score -= 2
+
+    # Short-term momentum
+    if ema_short > ema_fast:
         score += 1
-    else:
+    elif ema_short < ema_fast:
         score -= 1
 
-    if current_rsi < 30:
+    # Recent price momentum
+    if closes[-1] > closes[-2] > closes[-3]:
         score += 1
-    elif current_rsi > 70:
+    elif closes[-1] < closes[-2] < closes[-3]:
         score -= 1
 
-    if closes[-1] > closes[-2]:
+    # RSI confirmation
+    if 50 <= current_rsi <= 68:
         score += 1
-    else:
+    elif 32 <= current_rsi < 50:
         score -= 1
 
-    return "BUY" if score > 0 else "SELL"
+    # Avoid extreme RSI entries
+    if current_rsi > 75:
+        score -= 2
+    elif current_rsi < 25:
+        score += 2
 
+    if score >= 2:
+        return "BUY"
+
+    return "SELL"
 
 async def get_otc_candles(pair, duration):
     api_key = os.getenv("OTCHARTS_API_KEY")
