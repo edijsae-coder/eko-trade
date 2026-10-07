@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>EKO TRADE</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://telegram.org/js/telegram-web-app.js?64"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="bull">♉</div>
+        <div>
+          <div class="brand-name">EKO <span>TRADE</span></div>
+          <div class="brand-sub">mini app</div>
+        </div>
+      </div>
+      <button class="menu" aria-label="Menu">•••</button>
+    </header>
+
+    <main id="main">
+      <section id="home" class="screen active">
+        <div class="hero">
+          <div class="candles" aria-hidden="true"></div>
+          <div class="hero-content">
+            <div class="hero-title">EKO <span>TRADE</span></div>
+            <div class="hero-sub">FAST • SIMPLE • ACCURATE</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <label>CURRENCY</label>
+          <div id="pairs" class="pair-grid">
+            <button class="pair selected" data-pair="EUR/USD">🇪🇺🇺🇸 <b>EUR/USD</b></button>
+            <button class="pair" data-pair="GBP/USD">🇬🇧🇺🇸 <b>GBP/USD</b></button>
+            <button class="pair" data-pair="USD/JPY">🇺🇸🇯🇵 <b>USD/JPY</b></button>
+            <button class="pair" data-pair="AUD/USD">🇦🇺🇺🇸 <b>AUD/USD</b></button>
+            <button class="pair" data-pair="USD/CHF">🇺🇸🇨🇭 <b>USD/CHF</b></button>
+            <button class="pair" data-pair="NZD/USD">🇳🇿🇺🇸 <b>NZD/USD</b></button>
+          </div>
+
+          <label class="time-label">TRADE TIME</label>
+          <div id="durations" class="duration-grid">
+            <button class="duration" data-minutes="1">1 min</button>
+            <button class="duration selected" data-minutes="2">2 min</button>
+            <button class="duration" data-minutes="5">5 min</button>
+            <button class="duration" data-minutes="15">15 min</button>
+          </div>
+
+          <button id="analyze" class="analyze">
+            <span class="magnify">⌕</span> ANALYZE
+          </button>
+          <div id="error" class="error"></div>
+        </div>
+      </section>
+
+      <section id="result" class="screen result-screen">
+        <div class="result-title">ANALYSIS RESULT</div>
+        <div id="signal-card" class="signal-card">
+          <div id="signal-icon" class="signal-icon">↑</div>
+          <div id="signal" class="signal">BUY</div>
+          <div id="result-meta" class="result-meta">EUR/USD · 2 min</div>
+        </div>
+        <button id="again" class="analyze">↻ &nbsp; ANALYZE AGAIN</button>
+        <button id="change" class="secondary">← &nbsp; CHANGE PAIR</button>
+      </section>
+    </main>
+
+    <nav class="bottom">
+      <button class="nav active" data-screen="home"><span>▥</span>Signal</button>
+      <button class="nav" id="historyBtn"><span>◷</span>History</button>
+      <button class="nav" id="settingsBtn"><span>⚙</span>Settings</button>
+    </nav>
+  </div>
+<script src="/static/app.js"></script>
+</body>
+</html>
