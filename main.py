@@ -91,10 +91,10 @@ async def analyze(req: AnalyzeRequest):
     if req.minutes not in DURATION_ALLOWLIST:
         raise HTTPException(400, "Unsupported duration")
 
-   candles = await get_candles(req.pair.replace(" OTC", ""))
+    candles = await get_candles(req.pair.replace(" OTC", ""))
     signal = generate_signal(candles, req.minutes)
     return {"signal": signal, "pair": req.pair, "minutes": req.minutes}
-
+    
 app.mount("/static", StaticFiles(directory=BASE / "frontend"), name="static")
 
 @app.get("/")
