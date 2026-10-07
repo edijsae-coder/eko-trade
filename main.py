@@ -177,7 +177,7 @@ async def get_otc_candles(pair, duration):
             detail="Not enough OTC candle data",
         )
 
-       return candles
+    return candles
 
 
 @app.get("/")
