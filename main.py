@@ -558,5 +558,44 @@ async def optimize(
         "pair": pair,
         "duration": duration,
         "data_source": "Pocket Option OTC",
+        @app.get("/api/validate")
+async def validate(
+    pair: str = "EUR/USD OTC",
+    duration: int = 2,
+):
+    candles = await get_otc_candles(
+        pair,
+        duration,
+    )
+
+    split = int(len(candles) * 0.6)
+    validation_candles = candles[split:]
+
+    strategy = {
+        "name": "EMA 9/21 RSI 18 T3",
+        "fast": 9,
+        "slow": 21,
+        "rsi": 18,
+        "rsi_low": 30,
+        "rsi_high": 70,
+        "threshold": 3,
+    }
+
+    result = test_strategy(
+        validation_candles,
+        duration,
+        strategy,
+    )
+
+    return {
+        "pair": pair,
+        "duration": duration,
+        "validation": "last 40% of available candles",
+        "strategy": strategy["name"],
+        "wins": result["wins"],
+        "losses": result["losses"],
+        "total": result["total"],
+        "accuracy": result["accuracy"],
+    }
         "results": strategies[:10],
     }
