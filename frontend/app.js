@@ -78,6 +78,25 @@ async function analyze() {
       data.signal === "SELL"
     );
 
+    if (data.signal === "SELL") {
+  $("signal-card").style.borderColor = "#ff3b5c";
+  $("signal-card").style.background =
+    "linear-gradient(145deg, rgba(90, 8, 25, .85), rgba(25, 4, 12, .98))";
+
+  $("signal-icon").style.borderColor = "#ff3b5c";
+  $("signal-icon").style.color = "#ff3b5c";
+
+  $("signal").style.color = "#ff3b5c";
+} else {
+  $("signal-card").style.borderColor = "#10ed9a";
+  $("signal-card").style.background =
+    "linear-gradient(145deg, rgba(0, 75, 59, .65), rgba(3, 16, 25, .98))";
+
+  $("signal-icon").style.borderColor = "#18f4a0";
+  $("signal-icon").style.color = "#18f4a0";
+
+  $("signal").style.color = "#15efa0";
+}
     home.classList.remove("active");
     result.classList.add("active");
 
