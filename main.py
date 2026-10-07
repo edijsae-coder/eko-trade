@@ -318,6 +318,46 @@ def strategy_test_signal(closes, strategy):
 
     score = 0
 
+    # Trend
+    if fast > slow:
+        score += 1
+    elif fast < slow:
+        score -= 1
+
+    # Momentum
+    if closes[-1] > closes[-2] > closes[-3]:
+        score += 1
+    elif closes[-1] < closes[-2] < closes[-3]:
+        score -= 1
+
+    # RSI
+    if current_rsi < strategy["rsi_low"]:
+        score += 1
+    elif current_rsi > strategy["rsi_high"]:
+        score -= 1
+
+    # Strong signal only
+    threshold = strategy.get("threshold", 2)
+
+    if score >= threshold:
+        return "BUY"
+
+    if score <= -threshold:
+        return "SELL"
+
+    return None
+    if len(closes) < 40:
+        return None
+
+    fast = ema(closes, strategy["fast"])
+    slow = ema(closes, strategy["slow"])
+    current_rsi = rsi(closes, strategy["rsi"])
+
+    if fast is None or slow is None:
+        return None
+
+    score = 0
+
     if fast > slow:
         score += 1
     else:
@@ -338,48 +378,51 @@ def strategy_test_signal(closes, strategy):
 
 STRATEGIES = [
     {
-        "name": "EMA 9/21 RSI 30/70",
+        "name": "Strong 2/3",
         "fast": 9,
         "slow": 21,
         "rsi": 14,
         "rsi_low": 30,
         "rsi_high": 70,
+        "threshold": 2,
     },
     {
-        "name": "EMA 8/21 RSI 35/65",
-        "fast": 8,
+        "name": "Strong 3/3",
+        "fast": 9,
+        "slow": 21,
+        "rsi": 14,
+        "rsi_low": 30,
+        "rsi_high": 70,
+        "threshold": 3,
+    },
+    {
+        "name": "Strong RSI 35/65",
+        "fast": 9,
         "slow": 21,
         "rsi": 14,
         "rsi_low": 35,
         "rsi_high": 65,
+        "threshold": 2,
     },
     {
-        "name": "EMA 10/25 RSI 35/65",
-        "fast": 10,
-        "slow": 25,
-        "rsi": 14,
-        "rsi_low": 35,
-        "rsi_high": 65,
-    },
-    {
-        "name": "EMA 12/26 RSI 30/70",
-        "fast": 12,
-        "slow": 26,
+        "name": "Strong EMA 8/21",
+        "fast": 8,
+        "slow": 21,
         "rsi": 14,
         "rsi_low": 30,
         "rsi_high": 70,
+        "threshold": 2,
     },
     {
-        "name": "EMA 5/20 RSI 40/60",
-        "fast": 5,
-        "slow": 20,
+        "name": "Strong EMA 10/25",
+        "fast": 10,
+        "slow": 25,
         "rsi": 14,
-        "rsi_low": 40,
-        "rsi_high": 60,
+        "rsi_low": 30,
+        "rsi_high": 70,
+        "threshold": 2,
     },
 ]
-
-
 def test_strategy(candles, duration, strategy):
     wins = 0
     losses = 0
