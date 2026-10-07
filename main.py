@@ -507,3 +507,56 @@ async def backtest(
     result["data_source"] = "Pocket Option OTC"
 
     return result
+    
+@app.get("/api/optimize")
+async def optimize(
+    pair: str = "EUR/USD OTC",
+    duration: int = 2,
+):
+    candles = await get_otc_candles(
+        pair,
+        duration,
+    )
+
+    strategies = []
+
+    for fast in [5, 7, 9, 11, 13]:
+        for slow in [18, 21, 24, 27, 30]:
+            if fast >= slow:
+                continue
+
+            for rsi_period in [10, 14, 18]:
+                for threshold in [2, 3]:
+                    strategy = {
+                        "name": f"EMA {fast}/{slow} RSI {rsi_period} T{threshold}",
+                        "fast": fast,
+                        "slow": slow,
+                        "rsi": rsi_period,
+                        "rsi_low": 30,
+                        "rsi_high": 70,
+                        "threshold": threshold,
+                    }
+
+                    result = test_strategy(
+                        candles,
+                        duration,
+                        strategy,
+                    )
+
+                    if result["total"] >= 20:
+                        strategies.append(result)
+
+    strategies.sort(
+        key=lambda x: (
+            x["accuracy"],
+            x["total"],
+        ),
+        reverse=True,
+    )
+
+    return {
+        "pair": pair,
+        "duration": duration,
+        "data_source": "Pocket Option OTC",
+        "results": strategies[:10],
+    }
